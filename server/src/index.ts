@@ -2,7 +2,9 @@ import express, { Application } from 'express';
 import { ApolloServer } from 'apollo-server-express';
 import schema from './graphql/schema';
 import casual from 'casual';
-
+import cors from 'cors';
+import 'reflect-metadata';
+import { DataSource } from 'typeorm';
 
 let postsIds: string[] = [];
 let usersIds: string[] = [];
@@ -59,11 +61,11 @@ const mocks = {
     })
 };
 
-
 async function startApolloServer() {
     const PORT = 8080;
     const app: Application = express();
-    const server: ApolloServer = new ApolloServer({ schema, mocks, mockEntireSchema:false });
+    app.use(cors());
+    const server: ApolloServer = new ApolloServer({ schema });
     await server.start();
     server.applyMiddleware({
         app,
@@ -75,4 +77,26 @@ async function startApolloServer() {
     });
 }
 
-startApolloServer();
+const dataSource = new DataSource({
+    "type": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "username": "dbuser",
+    "password": "p4ssw0rd",
+    "database": "socialdb",
+    "synchronize": true,
+    "logging": false,
+    "entities": [
+    "src/entity/**/*.ts"
+    ],
+    "migrations": [
+    "src/migration/**/*.ts"
+    ],
+    "subscribers": [
+    "src/subscriber/**/*.ts"
+    ]
+});
+
+dataSource.initialize().then(() => { startApolloServer();
+}).catch(error => console.log("Database connection error: ", error));
+
