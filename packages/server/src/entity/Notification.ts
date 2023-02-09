@@ -1,6 +1,5 @@
 import {
-    Entity, Column, PrimaryGeneratedColumn,
-    CreateDateColumn
+    Entity, Column, PrimaryGeneratedColumn, CreateDateColumn
 } from 'typeorm';
 
 import { ManyToOne } from 'typeorm';

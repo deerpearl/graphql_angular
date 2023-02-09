@@ -4,15 +4,18 @@ import schema from './graphql/schema';
 import casual from 'casual';
 import cors from 'cors';
 import 'reflect-metadata';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { User, Post, Comment, Like, Notification } from './entity';
 
 let postsIds: string[] = [];
 let usersIds: string[] = [];
 
 const mocks = {
     User: () => ({
-        id: () => {let uuid = casual.uuid; usersIds.push(uuid); 
-            return uuid},
+        id: () => {
+            let uuid = casual.uuid; usersIds.push(uuid);
+            return uuid
+        },
         fullName: casual.full_name,
         bio: casual.text,
         email: casual.email,
@@ -24,8 +27,10 @@ const mocks = {
         postsCount: () => casual.integer(0)
     }),
     Post: () => ({
-        id: () => {let uuid = casual.uuid; postsIds.push(uuid);
-            return uuid},
+        id: () => {
+            let uuid = casual.uuid; postsIds.push(uuid);
+            return uuid
+        },
         text: casual.text,
         image: 'https://picsum.photos/seed/picsum/200/300',
         commentsCount: () => casual.integer(0),
@@ -61,11 +66,40 @@ const mocks = {
     })
 };
 
+export type Context = {
+    orm: {
+        userRepository: Repository<User>;
+        postRepository: Repository<Post>;
+        commentRepository: Repository<Comment>;
+        likeRepository: Repository<Like>;
+        notificationRepository: Repository<Notification>;
+    };
+    //authUser: User | null;
+};
+
 async function startApolloServer() {
     const PORT = 8080;
     const app: Application = express();
     app.use(cors());
-    const server: ApolloServer = new ApolloServer({ schema });
+
+    const userRepository: Repository<User> = dataSource.getRepository(User);
+    const postRepository: Repository<Post> = dataSource.getRepository(Post);
+    const commentRepository: Repository<Comment> = dataSource.getRepository(Comment);
+    const likeRepository: Repository<Like> = dataSource.getRepository(Like);
+    const notificationRepository: Repository<Notification> = dataSource.getRepository(Notification);
+
+    const context: Context = {
+        orm: {
+            userRepository: userRepository,
+            postRepository: postRepository,
+            commentRepository: commentRepository,
+            likeRepository: likeRepository,
+            notificationRepository: notificationRepository
+        }
+    };
+
+
+    const server: ApolloServer = new ApolloServer({schema, context});
     await server.start();
     server.applyMiddleware({
         app,
@@ -77,7 +111,7 @@ async function startApolloServer() {
     });
 }
 
-const dataSource = new DataSource({
+export const dataSource = new DataSource({
     "type": "mysql",
     "host": "localhost",
     "port": 3306,
@@ -87,16 +121,17 @@ const dataSource = new DataSource({
     "synchronize": true,
     "logging": false,
     "entities": [
-    "src/entity/**/*.ts"
+        "src/entity/**/*.ts"
     ],
     "migrations": [
-    "src/migration/**/*.ts"
+        "src/migration/**/*.ts"
     ],
     "subscribers": [
-    "src/subscriber/**/*.ts"
+        "src/subscriber/**/*.ts"
     ]
 });
 
-dataSource.initialize().then(() => { startApolloServer();
+dataSource.initialize().then(() => {
+    startApolloServer();
 }).catch(error => console.log("Database connection error: ", error));
 

@@ -1,5 +1,18 @@
 {
-  "devDependencies": {
-    "ts-node": "^10.9.1"
+  "name": "@ngsocial/ngsocial",
+  "private": true,
+  "version": "0.0.1",
+  "workspaces": [
+    "./packages/*"
+  ],
+  "scripts": {
+    "codegen": "NOT WORKING CMD: npx graphql-codegen --schema codegen.yml --watch",
+    "generate": "graphql-codegen"
+  },
+  "dependencies": {
+    "@graphql-codegen/cli": "^2.16.5",
+    "@graphql-codegen/typescript": "^2.8.8",
+    "@graphql-codegen/typescript-resolvers": "^2.7.13",
+    "graphql": "^16.6.0"
   }
 }
