@@ -1070,14 +1070,6 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@ngsocial/ngsocial@file:/home/deerpearl/angular_graphQL/packages/graphql-types":
-  version "1.0.0"
-  resolved "file:packages/graphql-types"
-  dependencies:
-    "@graphql-codegen/cli" "^2.16.5"
-    "@graphql-codegen/typescript" "^2.8.8"
-    "@graphql-codegen/typescript-resolvers" "^2.7.13"
-
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.npmjs.org/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz"
@@ -1263,7 +1255,7 @@
   resolved "https://registry.npmjs.org/@types/json-stable-stringify/-/json-stable-stringify-1.0.34.tgz"
   integrity sha512-s2cfwagOQAS8o06TcwKfr9Wx11dNGbH2E9vJz1cqV+a/LOyhWNLUNd6JSRYNzvB4d29UuJX2M0Dj9vE1T8fRXw==
 
-"@types/jsonwebtoken@^9.0.0":
+"@types/jsonwebtoken@^9.0.0", "@types/jsonwebtoken@^9.0.1":
   version "9.0.1"
   resolved "https://registry.npmjs.org/@types/jsonwebtoken/-/jsonwebtoken-9.0.1.tgz"
   integrity sha512-c5ltxazpWabia/4UzhIoaDcIza4KViOQhdbjRlfcIGVnsE3c3brkz9Z+F/EeJIECOQP7W7US2hNE930cWWkPiw==
@@ -2081,7 +2073,7 @@ dot-case@^3.0.4:
     no-case "^3.0.4"
     tslib "^2.0.3"
 
-dotenv@^16.0.0:
+dotenv@^16.0.0, dotenv@^16.0.3:
   version "16.0.3"
   resolved "https://registry.npmjs.org/dotenv/-/dotenv-16.0.3.tgz"
   integrity sha512-7GO6HghkA5fYG9TYnNxi14/7K9f5occMlp3zXAuSxn7CKCxt9xbNWG7yF8hTCSUchlfWSe3uLmlPfigevRItzQ==
@@ -3458,9 +3450,11 @@ serve-static@1.15.0:
     apollo-server-express "^3.11.1"
     casual "^1.6.2"
     cors "^2.8.5"
+    dotenv "^16.0.3"
     express "^4.18.2"
     faker "^6.6.6"
     graphql "^16.6.0"
+    jsonwebtoken "^9.0.0"
     mysql "^2.18.1"
     reflect-metadata "^0.1.13"
     typeorm "^0.3.11"

@@ -3,7 +3,40 @@ import { Context } from '..';
 import { Resolvers, User, Post, Comment, Like, Notification } from '@ngsocial/graphql';
 import { ApolloError } from 'apollo-server-errors';
 import { Post as PostEntity, Comment as CommentEntity, Like as LikeEntity } from '../entity';
-import { DeleteResult } from 'typeorm';
+import { DeleteResult, QueryFailedError } from 'typeorm';
+
+import jsonWebToken from 'jsonwebtoken';
+import crypto from 'crypto';
+import dotenv from 'dotenv';
+
+dotenv.config();
+const hashPassword = async (plainPassword: string):
+  Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const bytes = crypto.randomBytes(16);
+    const salt = bytes.toString("hex");
+    crypto.scrypt(plainPassword, salt, 64,
+      (error, buffer) => {
+        if (error) reject(error);
+        const hashedPassword = `${salt}:${buffer.toString('hex')}`;
+        resolve(hashedPassword);
+      });
+  })
+};
+
+const compareToHash = async (plainPassword: string, hash: 
+  string): Promise<boolean> => {
+   return new Promise((resolve, reject) => {
+   const result = hash.split(":");
+   const salt = result[0];
+   const hPass = result[1];
+   crypto.scrypt(plainPassword, salt, 64, 
+   (error, buffer) => {
+   if (error) reject(error);
+   resolve(hPass == buffer.toString('hex'));
+   });
+   })
+  };
 
 const resolvers: Resolvers = {
   Query: {
@@ -188,7 +221,47 @@ const resolvers: Resolvers = {
           "NOTIFICATION_NOT_DELETED");
       }
       return args.id;
-    }
+    },
+    register: async (_, args, { orm }) => {
+      const { fullName, username, email, password } = args;
+      let user = orm.userRepository.create({
+        fullName: fullName,
+        username: username,
+        email: email,
+        password: await hashPassword(password),
+        postsCount: 0,
+        image: 'https://i.imgur.com/nzTFnsM.png'
+      });
+      const savedUser = await orm.userRepository.save(user)
+        .catch((error: unknown) => {
+          if (error instanceof QueryFailedError && error.driverError.code == "ER_DUP_ENTRY") {
+            throw new ApolloError("A user with this email/username already exists", "USER_ALREADY_EXISTS");
+          }
+        });
+      console.log("saved user", savedUser.id);
+      const token = jsonWebToken.sign(
+        { id: savedUser.id, email: user.email },
+        process.env.JWT_SECRET as string,
+        { expiresIn: '1y' }
+      );
+      return { token: token, user: savedUser };
+    },
+    signIn: async (_, args, { orm }) => {
+      const { email, password } = args;
+      const user = await orm.userRepository.findOne({ where: { email: email } });
+      if (!user) {
+        throw new ApolloError('No user found with this email!', 'NO_USER_FOUND');
+      }
+      if (!await compareToHash(password, user.password)) {
+        throw new ApolloError('Incorrect password!', 'INCORRECT_PASSWORD');
+      }
+      const token = jsonWebToken.sign(
+        { id: user.id, email: user.email },
+        process.env.JWT_SECRET as string,
+        { expiresIn: '1d' }
+      );
+      return { token, user };
+    },
   }
 
 };
